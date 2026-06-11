@@ -1,0 +1,61 @@
+project:
+  name: negotiation-rl
+  seed: 42
+
+training:
+  mode: ppo          # ppo | pg
+  episodes: 1000
+  eval_every: 1      # Number of episodes between evaluations and model checkpoints
+  update_every: 1
+  max_steps: 10
+  lr: 0.0003
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_ratio: 0.2
+  value_coef: 0.5
+  entropy_coef: 0.01
+  batch_size: 64
+  mini_epochs: 5
+  gradient_clip_norm: 1.0
+  offline_pretrain_epochs: 5
+  offline_pretrain_batch_size: 128
+  offline_algo: mixed          # bc | pg | ppo | mixed
+  utility_scale: true
+
+  # ── Reward mode untuk propose trainer ────────────────────────────
+  # mode1 = r_bid (Persamaan 9): reward = utility saat sepakat, -1 selain itu.
+  # Tambahkan mode baru di _compute_step_reward_propose() di reward_shaper.py.
+  propose_reward_mode: mode1
+
+  # ── Reward mode untuk respond trainer ────────────────────────────
+  # Setiap mode adalah kombinasi (accept_variant, offer_variant, failure_penalty).
+  # Lihat _RESPOND_MODE_TABLE di RewardShaper (reward_shaper.py) untuk semua mode (mode1..mode27).
+  # mode1 = (accept_a, offer_a, penalty=-1)  → kombinasi dasar dari paper.
+  respond_reward_mode: mode1
+
+  # ── DLST-ANESIA ──────────────────────────────────────────────────
+  # Reward respond khusus DLST = r_acc (Persamaan 10), butuh opponent utility.
+  dlst_respond_reward_mode: dlst
+  # Reward threshold = r_ū_t (Persamaan 8).
+  threshold_reward_mode: mode1
+  # Ambang batas tetap (u) untuk taktik acceptance "u_fixed".
+  dlst_u_fixed: 0.6
+  # Hyperparameter DDPG.
+  ddpg_tau: 0.005        # soft update target network
+  ddpg_epoch: 5          # jumlah epoch update per pemanggilan update()
+
+env:
+  domain_path: configs\domains\ANAC\laptop
+  max_steps: 20
+  max_action_library: 256
+  max_rounds: 5
+
+paths:
+  trajectories_dir: data\trajectories
+  models_dir: data\models
+  runs_dir: data\runs
+  metrics_dir: data\metrics
+
+evaluation:
+  episodes: 10
+  save_plots: true
